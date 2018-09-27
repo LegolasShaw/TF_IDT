@@ -3,9 +3,10 @@ import jieba
 from collections import Counter
 from operator import itemgetter, attrgetter
 
+import datetime
+import math
 
 jieba.load_userdict('my_dict/dict.txt')
-
 
 class OutDoc(object):
     def __init__(self, doc_path=None):
@@ -54,22 +55,70 @@ class OutDoc(object):
                 dict_word.pop(key)
         return dict_word
 
-def TF_IDF(file_path):
-    file_article = open(file_path)
-    for each_article in file_article.readlines():
 
-        pass
+class TfIdf(object):
+    def __init__(self, data_dict):
+        self._data_dict = data_dict
+
+    # TF 等于 该文档中该词出现的次数 除以文档的总词数
+    # IDF 等于总的 log（总文档数/总文档中该词出现的次数 + 1）
+    # 最后将 TF*IDF
+    def calculate_result(self):
+        result = []
+        x = 0
+        for row in self._data_dict:
+            x += 1
+            print(x)
+            total_count = 0
+            for i in range(len(row)):
+                total_count = total_count + row[i][1]
+            article = {}
+            for i in range(len(row)):
+                tf_idf = {}
+                word = row[i][0]
+                word_count = row[i][1]
+                TF_word = word_count/total_count
+
+                IDF_word_count = 0
+                for arow in self._data_dict:
+                    for i in range(len(arow)):
+                        if arow[i][0] == word:
+                            IDF_word_count += 1
+                            break
+
+                IDF = math.log(len(self._data_dict)/(IDF_word_count +1), 2)
+
+                # tf_idf[word] = TF_word * IDF
+                article[word] = TF_word * IDF
+            sort_list = sorted(article.items(), key=itemgetter(1), reverse=True)
+            result.append(sort_list)
+        return result
+
 
 
 
 
 if __name__ == "__main__":
+    now = datetime.datetime.now()
+    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     new_obj = OutDoc('text.txt')
-    # new_obj.cut_words()
-
     file_n = open('new_text.txt', 'r', encoding='utf8')
 
+    data_dict = []
     for row in file_n.readlines():
         word_dict = new_obj.count_words_freq(row)
         sorted_result = new_obj.sorted_result(word_dict, top=10)
-        print(sorted_result)
+        data_dict.append(sorted_result)
+
+    tfidf = TfIdf(data_dict)
+    print(tfidf.calculate_result())
+    print(datetime.datetime.now() - now)
+
+
+
+
+
+
+
+
+
