@@ -18,10 +18,20 @@ class OutDoc(object):
 
     def cut_words(self, new_file_path):
         new_file = open(new_file_path, 'a', encoding='utf8')
+        stopwordsList = self.stopwordsList()
         for arow in self._file_open.readlines():
             seg_list = jieba.cut(arow, cut_all=False)
-            new_row = " ".join(seg_list)
-            new_file.write(new_row)
+            lenc = ""
+            for word in seg_list:
+                if word not in stopwordsList:
+                    if lenc == "":
+                        lenc = word
+                    else:
+                        lenc = lenc + " " + word
+            # new_row = " ".join(seg_list)
+
+            new_file.write(lenc)
+            new_file.readlines()
         new_file.close()
 
     def count_words_freq(self, word_list):
@@ -54,6 +64,10 @@ class OutDoc(object):
             if key in dict_word.keys():
                 dict_word.pop(key)
         return dict_word
+
+    def stopwordsList(self):
+        stopwords = [line.strip() for line in open('stopword.txt', encoding='utf-8')]
+        return stopwords
 
 
 class TfIdf(object):
@@ -88,7 +102,6 @@ class TfIdf(object):
 
                 IDF = math.log(len(self._data_dict)/(IDF_word_count +1), 2)
 
-                # tf_idf[word] = TF_word * IDF
                 article[word] = TF_word * IDF
             sort_list = sorted(article.items(), key=itemgetter(1), reverse=True)
             result.append(sort_list)
@@ -102,7 +115,8 @@ if __name__ == "__main__":
     now = datetime.datetime.now()
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     new_obj = OutDoc('text.txt')
-    file_n = open('new_text.txt', 'r', encoding='utf8')
+    new_obj.cut_words('test1.txt')
+    file_n = open('test1.txt', 'r', encoding='utf8')
 
     data_dict = []
     for row in file_n.readlines():
@@ -111,7 +125,10 @@ if __name__ == "__main__":
         data_dict.append(sorted_result)
 
     tfidf = TfIdf(data_dict)
-    print(tfidf.calculate_result())
+    reslut = tfidf.calculate_result()
+
+    for row in reslut:
+        print(row)
     print(datetime.datetime.now() - now)
 
 
